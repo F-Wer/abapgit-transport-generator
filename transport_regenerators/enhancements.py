@@ -238,7 +238,7 @@ def _regenerate_enho_data_blob(records: list, obj_name: str, rule: "RenameRule",
     if TEMPLATES["ENHO"]["object"].encode("utf-16-le") not in bytes(payload):
         print(f"  WARNING: {obj_name}: ENHHEADER RAW payload does not "
               f"contain the expected template object name "
-              f"{TEMPLATES["ENHO"]["object"]!r} -- template may have changed; "
+              f"{TEMPLATES['ENHO']['object']!r} -- template may have changed; "
               f"binary metadata NOT rewritten (shipping stale content)")
         return records
 
@@ -423,7 +423,7 @@ def _regenerate_enho_badi_data_blob(records: list, obj_name: str,
     if TEMPLATES["ENHO_BADI"]["object"].encode("utf-16-le") not in bytes(payload):
         print(f"  WARNING: {obj_name}: ENHHEADER RAW payload does not "
               f"contain the expected BADI_IMPL template's own IMPL_NAME "
-              f"{TEMPLATES["ENHO_BADI"]["object"]!r} -- template may have "
+              f"{TEMPLATES['ENHO_BADI']['object']!r} -- template may have "
               f"changed; binary metadata NOT rewritten (shipping stale "
               f"content)")
         return records
@@ -461,13 +461,13 @@ def _regenerate_enho_badi_data_blob(records: list, obj_name: str,
     elif repo_filter_names:
         print(f"  WARNING: {obj_name}: .enho.xml declares "
               f"{len(repo_filter_names)} filter(s), template has "
-              f"{len(template_name("ENHO_BADI", "filter_names"))} -- filter names/"
+              f"{len(template_name('ENHO_BADI', 'filter_names'))} -- filter names/"
               f"values NOT rewritten (shipping the template's own stale "
               f"filter data), only a matching count can be mapped 1:1")
     elif not repo_filter_names and any(
             template_name("ENHO_BADI", "filter_names")):
         print(f"  WARNING: {obj_name}: .enho.xml declares no filters, but "
-              f"the template's own BADI_IMPL object has {len(template_name("ENHO_BADI", "filter_names"))} "
+              f"the template's own BADI_IMPL object has {len(template_name('ENHO_BADI', 'filter_names'))} "
               f"-- the template's stale filter data ships unchanged (removing "
               f"it would require shifting the whole packed binary field, "
               f"out of scope this round)")
@@ -498,7 +498,7 @@ def _regenerate_enho_badi_data_blob(records: list, obj_name: str,
     elif repo_filter_values and repo_filter_names:
         print(f"  WARNING: {obj_name}: .enho.xml declares "
               f"{len(repo_filter_values)} filter value(s), template has "
-              f"{len(template_name("ENHO_BADI", "filter_char_values"))} -- filter "
+              f"{len(template_name('ENHO_BADI', 'filter_char_values'))} -- filter "
               f"values NOT rewritten (shipping the template's own stale "
               f"values)")
 
