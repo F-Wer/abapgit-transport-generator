@@ -1,0 +1,7 @@
+# Direct runtime dependencies. requirements.txt is compiled from this file:
+#   pip-compile --generate-hashes --strip-extras --output-file requirements.txt requirements.in
+pysap==0.2.1
+defusedxml==0.7.1
+# Installed by pysap, never imported here; pysap upstream pins 2.7.0 after an
+# ASN.1 regression in 2.8.0, and the test environment uses it.
+scapy==2.7.0

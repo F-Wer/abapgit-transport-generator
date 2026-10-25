@@ -1,0 +1,85 @@
+# Sample workflow: copy it into your abapGit repository as
+# .github/workflows/abapgit-to-transport.yml
+#
+# It builds the SAP transport files (cofile + data file) from src/, bundles
+# them into a zip and publishes them as a GitHub release you can download
+# and import via STMS.
+#
+# Prerequisites
+# -------------
+# * The repository is in abapGit format (objects live in src/).
+# * Your transport templates live in a private repository you control (see
+#   docs/templates.md of the generator). The workflow checks it out with a
+#   read-only token stored as the secret TEMPLATES_TOKEN.
+#
+# Watch out for
+# -------------
+# * Set `package`: without it the objects are MOVED into the template's
+#   package when the transport is imported.
+# * If the objects already exist on the target system, tick
+#   "Overwrite Originals" in the STMS import dialog.
+# * Import into a non-production system first.
+
+name: abapGit → SAP Transport
+
+on:
+  workflow_dispatch:
+    inputs:
+      request:
+        description: 'Transport request (e.g. DEVK900001)'
+        required: true
+        type: string
+      object:
+        description: 'Specific object (leave empty for ALL objects in src/)'
+        required: false
+        type: string
+        default: ''
+      package:
+        description: 'ABAP package / DEVCLASS, e.g. /NAMESPACE/PACKAGE'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  generate-transport:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # needed to create the release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout templates
+        uses: actions/checkout@v4
+        with:
+          repository: your-org/sap-transport-templates
+          path: transport-templates
+          token: ${{ secrets.TEMPLATES_TOKEN }}
+
+      - name: Generate transport
+        id: transport
+        uses: F-Wer/abapgit-transport-generator@v0.1.0
+        with:
+          request: ${{ inputs.request }}
+          object: ${{ inputs.object }}
+          package: ${{ inputs.package }}
+          templates: transport-templates
+
+      # The action exposes three outputs: cofile, datafile and zip.
+      # Inputs reach the script only through environment variables.
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUEST: ${{ inputs.request }}
+          ZIP: ${{ steps.transport.outputs.zip }}
+        run: |
+          TAG="transport-$REQUEST"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --clobber
+          else
+            gh release create "$TAG" "$ZIP" \
+              --title "SAP transport $REQUEST" \
+              --notes "Unpack the zip, copy K* to /usr/sap/trans/cofiles/ and R* to /usr/sap/trans/data/ (binary), then STMS -> Extras -> Other Requests -> Add -> $REQUEST."
+          fi

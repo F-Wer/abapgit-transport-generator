@@ -1,0 +1,14 @@
+# SAP transport cofiles and data files (K900001.DEV, R900001.DEV: the
+# extension is the system ID) are binary R3trans containers, not text.
+# Without this, git's text heuristic plus core.autocrlf=true silently
+# CRLF-converts short, ASCII-looking cofiles on checkout and corrupts their
+# length and bytes. Data files usually escape by containing NUL bytes;
+# cofiles do not.
+# Matched by name (K/R + six digits, optionally prefixed): git may match
+# patterns case-insensitively, so an extension-only rule would catch .txt
+# (and a [KR] class does not match there).
+K[0-9][0-9][0-9][0-9][0-9][0-9].* -text -diff
+*_K[0-9][0-9][0-9][0-9][0-9][0-9].* -text -diff
+R[0-9][0-9][0-9][0-9][0-9][0-9].* -text -diff
+*_R[0-9][0-9][0-9][0-9][0-9][0-9].* -text -diff
+*.sh text eol=lf

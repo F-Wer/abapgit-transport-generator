@@ -1,0 +1,70 @@
+name: Public checks
+
+# Checks that matter once the repository is public:
+# - the identifier scan (gate 0): no internal system, organization or object
+#   name and no binary file may enter the repository. The banned list is the
+#   RELEASE_SCAN_PATTERNS secret (one regex per line), because the list
+#   names what must not appear. A public repository without it fails.
+# - dependency review and CodeQL, which GitHub offers free for public
+#   repositories.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '41 4 * * 2'
+
+permissions:
+  contents: read
+
+jobs:
+  identifier-scan:
+    name: Identifier scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.1.7
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.11'
+      - name: Scan every tracked file
+        env:
+          RELEASE_SCAN_PATTERNS: ${{ secrets.RELEASE_SCAN_PATTERNS }}
+          IS_PRIVATE: ${{ github.event.repository.private }}
+        run: |
+          if [ -z "$RELEASE_SCAN_PATTERNS" ]; then
+            if [ "$IS_PRIVATE" = "true" ]; then
+              echo "::notice::RELEASE_SCAN_PATTERNS not set; skipped in a private repository"
+              exit 0
+            fi
+            echo "::error::secret RELEASE_SCAN_PATTERNS is not set"
+            exit 1
+          fi
+          BANNED=$(mktemp)
+          printf '%s\n' "$RELEASE_SCAN_PATTERNS" > "$BANNED"
+          git ls-files -z | xargs -0 python tools/release_scan.py --banned "$BANNED"
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request' && !github.event.repository.private
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.1.7
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: low
+          # GPL-2.0-only project: GPL-3.0 and AGPL dependencies are incompatible.
+          deny-licenses: GPL-3.0-only, GPL-3.0-or-later, AGPL-3.0-only, AGPL-3.0-or-later
+
+  codeql:
+    name: CodeQL
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.1.7
+      - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          languages: python
+      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
