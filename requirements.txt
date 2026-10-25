@@ -169,9 +169,9 @@ pysap==0.2.1 \
     --hash=sha256:515fe335a4527d39faa922171c1c65e04a8a05ee4a46c949cbde9d43a6a85477 \
     --hash=sha256:ddce650aea2785052bcbb7f9995b37d8cb6914e6f276a5e435701569748bb0c5
     # via -r requirements.in
-scapy==2.7.0 \
-    --hash=sha256:bfc1ef1b93280aea1ddee53be7f74232aa28ac3d891244d41ee85200d24aa446 \
-    --hash=sha256:eb22786da92be6fd8e5c694ae5595e4f5b9ac1f4364c9c45986844f3e3063561
+scapy==2.8.0 \
+    --hash=sha256:0eacd1f940d115611c1b8a4696f315b4b80caf2951e546893a3d0cd7f6bfd6fd \
+    --hash=sha256:abf855145ee829a42b2eb28983cd6a0a52b12a31d3f861cb7be36791195ed9aa
     # via
     #   -r requirements.in
     #   pysap
